@@ -7,9 +7,3 @@ data class SensorTrend(
     val avgSoilMoisturePct: Int = 0,
     val avgGasLevel: Int = 0
 )
-
-data class DeviceStatus(
-    val isOnline: Boolean = false,
-    val lastSeen: String = "",
-    val latestData: SensorData = SensorData()
-)

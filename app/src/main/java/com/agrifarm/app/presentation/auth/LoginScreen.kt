@@ -20,18 +20,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String, String, String) -> Unit,
+    onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    
-    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        viewModel.handleSignInResult(result.data)
-    }
+    var phone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
@@ -75,9 +70,9 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(48.dp))
             
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
+                value = phone,
+                onValueChange = { phone = it },
+                label = { Text("Phone Number") },
                 leadingIcon = { Icon(Icons.Outlined.Person, null) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -87,69 +82,46 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email (Optional)") },
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
                 leadingIcon = { Icon(Icons.Outlined.Email, null) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                singleLine = true
+                singleLine = true,
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation()
             )
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            if (uiState is LoginUiState.Loading) {
-                CircularProgressIndicator(color = Color(0xFF4CAF50))
-            } else {
-                Button(
-                    onClick = { launcher.launch(viewModel.getSignInIntent(context)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,
-                        contentColor = Color.Black
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Sign in with Google", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Button(
+                onClick = { viewModel.login(phone, password) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                enabled = uiState !is LoginUiState.Loading && phone.isNotBlank() && password.isNotBlank()
+            ) {
+                if (uiState is LoginUiState.Loading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                } else {
+                    Text("Login", fontSize = 16.sp, fontWeight = FontWeight.Medium)
                 }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Button(
-                    onClick = {
-                        if (name.isNotBlank()) {
-                            viewModel.loginAsGuest(name, email)
-                            onLoginSuccess(
-                                "guest_${System.currentTimeMillis()}",
-                                email.ifBlank { "guest@agrifarm.com" },
-                                name
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    enabled = name.isNotBlank()
-                ) {
-                    Text("Continue", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                TextButton(
-                    onClick = {
-                        viewModel.loginAsGuest("Guest User", "")
-                        onLoginSuccess("guest_${System.currentTimeMillis()}", "guest@agrifarm.com", "Guest User")
-                    }
-                ) {
-                    Text("Continue as Guest", color = Color.Gray)
-                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            TextButton(onClick = onNavigateToForgotPassword) {
+                Text("Forgot Password?", color = Color.Gray)
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            TextButton(onClick = onNavigateToRegister) {
+                Text("Don't have an account? Register", color = Color(0xFF4CAF50))
             }
             
             if (uiState is LoginUiState.Error) {

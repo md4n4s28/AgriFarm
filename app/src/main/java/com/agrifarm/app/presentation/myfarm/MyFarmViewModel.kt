@@ -2,7 +2,6 @@ package com.agrifarm.app.presentation.myfarm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.agrifarm.app.data.local.UserPreferences
 import com.agrifarm.app.data.model.DeviceStatus
 import com.agrifarm.app.data.model.SensorTrend
 import com.agrifarm.app.data.repository.SensorRepository
@@ -15,8 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MyFarmViewModel @Inject constructor(
-    private val sensorRepository: SensorRepository,
-    private val userPreferences: UserPreferences
+    private val sensorRepository: SensorRepository
 ) : ViewModel() {
 
     private val _deviceStatus = MutableStateFlow(DeviceStatus())
@@ -24,6 +22,8 @@ class MyFarmViewModel @Inject constructor(
 
     private val _trends = MutableStateFlow<List<SensorTrend>>(emptyList())
     val trends: StateFlow<List<SensorTrend>> = _trends.asStateFlow()
+    
+    private val userId = "default_user"
 
     init {
         startMonitoring()
@@ -31,23 +31,11 @@ class MyFarmViewModel @Inject constructor(
 
     private fun startMonitoring() {
         viewModelScope.launch {
-            sensorRepository.getSensorDataStream().collect { result ->
-                result.fold(
-                    onSuccess = { data ->
-                        _deviceStatus.value = DeviceStatus(
-                            isOnline = true,
-                            lastSeen = "Just now",
-                            latestData = data
-                        )
-                    },
-                    onFailure = { error ->
-                        _deviceStatus.value = DeviceStatus(
-                            isOnline = false,
-                            lastSeen = "Offline",
-                            latestData = _deviceStatus.value.latestData
-                        )
-                        android.util.Log.e("MyFarmViewModel", "Error: ${error.message}")
-                    }
+            sensorRepository.observeSensorData(userId).collect { data ->
+                _deviceStatus.value = DeviceStatus(
+                    isOnline = true,
+                    lastSeen = "Just now",
+                    latestData = data
                 )
             }
         }

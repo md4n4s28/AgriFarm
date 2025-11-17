@@ -83,11 +83,52 @@ fun AgriFarmApp() {
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(Screen.Login.route) {
-                LoginScreen(onLoginSuccess = { userId, email, name ->
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                LoginScreen(
+                    onLoginSuccess = { userId, email, name ->
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate("register")
+                    },
+                    onNavigateToForgotPassword = {
+                        navController.navigate("forgot_password")
                     }
-                })
+                )
+            }
+            composable("register") {
+                com.agrifarm.app.presentation.auth.RegisterScreen(
+                    onNavigateToOtp = { phone ->
+                        navController.navigate("otp/$phone")
+                    },
+                    onNavigateToLogin = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+            composable("otp/{phone}") { backStackEntry ->
+                val phone = backStackEntry.arguments?.getString("phone") ?: ""
+                com.agrifarm.app.presentation.auth.OtpVerificationScreen(
+                    phone = phone,
+                    onVerified = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable("forgot_password") {
+                com.agrifarm.app.presentation.auth.ForgotPasswordScreen(
+                    onPasswordReset = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
             composable(Screen.Home.route) { 
                 HomeScreen(

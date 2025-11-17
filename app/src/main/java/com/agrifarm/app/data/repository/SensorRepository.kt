@@ -1,10 +1,11 @@
 package com.agrifarm.app.data.repository
 
-import com.agrifarm.app.data.api.SensorApi
+import com.agrifarm.app.data.database.SupabaseDatabase
+import com.agrifarm.app.data.database.SensorDataEntity
 import com.agrifarm.app.data.model.SensorData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -14,30 +15,57 @@ import javax.inject.Singleton
 
 @Singleton
 class SensorRepository @Inject constructor(
-    private val sensorApi: SensorApi
+    private val database: SupabaseDatabase
 ) {
     private val client = OkHttpClient()
     private var esp32Ip = "10.115.22.233" // Default IP
     
-    private var lastSavedData: SensorData? = null
+    // Real-time sensor data from Supabase
+    fun observeSensorData(userId: String): Flow<SensorData> {
+        return database.observeSensorData(userId).map { entity ->
+            SensorData(
+                deviceId = entity.deviceId,
+                ts = entity.timestamp,
+                temperature = entity.temperature,
+                humidity = entity.humidity,
+                soilMoisture = entity.soilMoisture,
+                soilMoisturePct = entity.soilMoisturePct,
+                gasLevel = entity.gasLevel,
+                rainDetected = entity.rainDetected,
+                rainAnalog = entity.rainAnalog,
+                dhtOk = true,
+                soilOk = true,
+                gasOk = true,
+                rainOk = true
+            )
+        }
+    }
     
-    fun getSensorDataStream(): Flow<Result<SensorData>> = flow {
-        while (true) {
-            try {
-                val data = fetchFromESP32()
-                lastSavedData = data // Cache the data
-                emit(Result.success(data))
-            } catch (e: Exception) {
-                android.util.Log.e("SensorRepository", "Error fetching data", e)
-                // Use last saved data if available, otherwise emit error
-                if (lastSavedData != null) {
-                    android.util.Log.d("SensorRepository", "Using last saved data")
-                    emit(Result.success(lastSavedData!!))
-                } else {
-                    emit(Result.failure(Exception("Device offline or unreachable: ${e.message}")))
-                }
+    // Get latest sensor data
+    suspend fun getLatestSensorData(userId: String): Result<SensorData> {
+        return try {
+            val data = database.getSensorData(userId, 1).firstOrNull()
+            if (data != null) {
+                Result.success(SensorData(
+                    deviceId = data.deviceId,
+                    ts = data.timestamp,
+                    temperature = data.temperature,
+                    humidity = data.humidity,
+                    soilMoisture = data.soilMoisture,
+                    soilMoisturePct = data.soilMoisturePct,
+                    gasLevel = data.gasLevel,
+                    rainDetected = data.rainDetected,
+                    rainAnalog = data.rainAnalog,
+                    dhtOk = true,
+                    soilOk = true,
+                    gasOk = true,
+                    rainOk = true
+                ))
+            } else {
+                Result.failure(Exception("No sensor data available"))
             }
-            kotlinx.coroutines.delay(3000)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
     

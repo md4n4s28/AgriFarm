@@ -2,6 +2,7 @@ package com.agrifarm.app.di
 
 import com.agrifarm.app.data.api.GeminiApiService
 import com.agrifarm.app.data.api.SensorApi
+import com.agrifarm.app.data.database.SupabaseDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -9,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.realtime.Realtime
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -45,6 +47,13 @@ object NetworkModule {
             supabaseKey = "your-anon-key"
         ) {
             install(Postgrest)
+            install(Realtime)
         }
+    }
+    
+    @Provides
+    @Singleton
+    fun provideSupabaseDatabase(supabaseClient: SupabaseClient): SupabaseDatabase {
+        return SupabaseDatabase(supabaseClient)
     }
 }

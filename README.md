@@ -2,7 +2,7 @@
 
 **Smart India Hackathon 2025 - Problem Statement SIH25030**
 
-AI-powered advisory platform for farmers integrating satellite imagery, IoT sensors, weather forecasts, and market data.
+AI-powered advisory platform for farmers with real-time IoT integration, Supabase backend, and zero local data storage.
 
 ---
 
@@ -15,16 +15,15 @@ cp .env.example .env
 # Fill in your API keys in .env
 ```
 
-### 2. Open in Android Studio
-- Open project in Android Studio
+### 2. Complete Setup
+- Follow **[SETUP.md](SETUP.md)** for complete instructions
+- Setup Supabase database
+- Configure environment variables
+- Setup IoT (optional)
+
+### 3. Run
+- Open in Android Studio
 - Wait for Gradle sync
-- Click "Sync Now" if prompted
-
-### 3. Configure Environment
-- Add Supabase credentials to `.env`
-- See `docs/ENV_SETUP_GUIDE.md` for details
-
-### 4. Run
 - Connect device or start emulator
 - Click Run ▶️
 
@@ -32,9 +31,7 @@ cp .env.example .env
 
 ## 📚 Documentation
 
-- **[Progress Checklist](docs/PROGRESS_CHECKLIST.md)** - Track development progress
-- **[Project Guide](docs/PROJECT_GUIDE.md)** - Complete development guide
-- **[Environment Setup](docs/ENV_SETUP_GUIDE.md)** - Configure API keys
+- **[SETUP.md](SETUP.md)** - Complete setup guide (Database + App + IoT)
 
 ---
 
@@ -51,13 +48,14 @@ cp .env.example .env
 
 ## 🎯 Features
 
-- ✅ Real-time IoT sensor monitoring
-- ✅ AI-powered crop recommendations
-- ✅ Market price predictions
-- ✅ Disease detection via camera
-- ✅ Weather forecasts
-- ✅ Satellite imagery analysis
-- ✅ Multi-language support
+- ✅ **Real-time Data**: All data syncs via Supabase Realtime
+- ✅ **Zero Local Storage**: No Room, no SharedPreferences
+- ✅ **Entity-Based ORM**: JPQL-style entities for fast table modifications
+- ✅ **IoT Integration**: Live ESP32 sensor data streaming
+- ✅ **AI-Powered**: Crop recommendations & disease detection
+- ✅ **Market Intelligence**: Price predictions & trends
+- ✅ **Weather Alerts**: Real-time notifications
+- ✅ **Multi-language**: Support for regional languages
 
 ---
 
@@ -65,11 +63,19 @@ cp .env.example .env
 
 ```
 app/src/main/java/com/agrifarm/app/
-├── data/           # Data layer (repositories, APIs)
-├── domain/         # Business logic (models, use cases)
-├── presentation/   # UI layer (screens, viewmodels)
-├── di/             # Dependency injection
-└── util/           # Utilities and constants
+├── data/
+│   ├── api/              # External API services
+│   ├── auth/             # Authentication
+│   ├── database/         # ⭐ Supabase entities & database
+│   │   ├── SupabaseEntities.kt
+│   │   ├── SupabaseDatabase.kt
+│   │   └── EntityMappers.kt
+│   ├── model/            # Domain models
+│   └── repository/       # Data repositories
+├── di/                   # Dependency injection
+├── domain/               # ViewModels
+├── presentation/         # UI screens
+└── util/                 # Utilities
 ```
 
 ---
@@ -90,12 +96,21 @@ app/src/main/java/com/agrifarm/app/
 
 ---
 
-## 📱 Current Status
+## 🔄 Real-time Architecture
 
-**Phase:** 1.1 - Configuration Setup ✅  
-**Next:** 1.2 - Folder Structure & Theme
+### Data Flow
+```
+ESP32 Sensors → Supabase Database → Android App (Real-time)
+     ↑                    ↑                    ↓
+  WiFi              Realtime API          UI Updates
+```
 
-See [PROGRESS_CHECKLIST.md](docs/PROGRESS_CHECKLIST.md) for detailed status.
+### Key Benefits
+- ⚡ Instant data synchronization
+- 📱 Multi-device support
+- ☁️ Cloud-first architecture
+- 🔄 Automatic conflict resolution
+- 📊 Live dashboard updates
 
 ---
 
@@ -103,13 +118,29 @@ See [PROGRESS_CHECKLIST.md](docs/PROGRESS_CHECKLIST.md) for detailed status.
 
 - Never commit `.env` file
 - Keep API keys secure
-- Use `.env.example` to share structure
+- Use Row Level Security (RLS) in production
+- Enable Supabase Auth policies
+
+---
+
+## 📊 Database Management
+
+### Add New Table
+1. Add entity in `SupabaseEntities.kt`
+2. Add methods in `SupabaseDatabase.kt`
+3. Add mapper in `EntityMappers.kt`
+4. Run SQL in Supabase Dashboard
+
+### Modify Existing Table
+1. Update entity class
+2. Run ALTER TABLE in Supabase
+3. Update mappers if needed
 
 ---
 
 ## 📞 Support
 
-Check `docs/` folder for detailed guides and troubleshooting.
+Check **[SETUP.md](SETUP.md)** for complete setup instructions
 
 ---
 
